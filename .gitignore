@@ -1,0 +1,7 @@
+.vs/
+vendor/
+
+app/config/development.php
+app/config/production.php
+
+composer.lock

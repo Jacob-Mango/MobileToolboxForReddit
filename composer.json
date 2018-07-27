@@ -1,0 +1,18 @@
+{
+    "autoload": {
+        "psr-4": {
+            "RTPWA\\": "app/RTPWA"
+        }
+    },
+    "require": {
+        "slim/slim": "~2.0",
+        "slim/views": "0.1.*",
+        "twig/twig": "~1.0",
+        "hassankhan/config": "0.8.*",
+        "illuminate/database": "~5.0",
+        "alexgarrett/violin": "2.*",
+        "ircmaxell/random-lib": "~1.1",
+        "guzzlehttp/guzzle": "^6.3",
+        "adoy/oauth2": "^1.3"
+    }
+}
