@@ -31,8 +31,8 @@ $app->configureMode($app->config('mode'), function() use ($app) {
 require('database.php');
 require('routes.php');
 
-$app->container->set('reddit', function() {
-    return new RedditAPI();
+$app->container->set('reddit', function() use ($app) {
+    return new RedditAPI($app);
 });
 
 $view = $app->view();

@@ -7,19 +7,19 @@ use RTPWA\API\Authenticator;
 class RedditAPI
 {
 
-    public function __construct()
+    public function __construct($app)
     {
         $this->scope = "creddits,modcontributors,modmail,modconfig,subscribe,structuredstyles,vote,wikiedit,mysubreddits,submit,modlog,modposts,modflair,save,modothers,read,privatemessages,report,identity,livemanage,account,modtraffic,wikiread,edit,modwiki,modself,history,flair";
 
         $this->authorizeUrl = 'https://ssl.reddit.com/api/v1/authorize';
         $this->accessTokenUrl = 'https://ssl.reddit.com/api/v1/access_token';
-        $this->clientId = '9GY1r8pRgR0Szg';
-        $this->clientSecret = '2YeC74zd4jiQulVYNBvMxfWQfWg';
-        $this->userAgent = 'web:co.jacobmango.rtpwa:v0.0.1 (by /u/Jacob_Mango)';
+        $this->clientId = $app->config->get('reddit.client_id');
+        $this->clientSecret = $app->config->get('reddit.secret');
+        $this->userAgent = str_replace("{version}", "v0.0.2", $app->config->get('reddit.user_agent'));
 
         $actual_link = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
 
-        $this->redirectUrl = "http://127.0.0.1/";
+        $this->redirectUrl = "http://192.168.0.53/";
 
         $this->client = null;
 
@@ -93,17 +93,32 @@ class RedditAPI
         ), \OAuth2\Client::HTTP_METHOD_POST);
     }
 
-    public function link($url) {
-       // $this->guzzleClient = new \GuzzleHttp\Client(array(
-       //     'headers' => ['User-Agent' => $this->userAgent],
-       //     'scope' => $this->scope,
-       //     'verify' => false
-       // ));
+    private function strHasAt($string, $query, $index = 0) {
+        return substr($string, $index, $index + strlen($query)) === $query;
+    }
 
-        //return $this->guzzleClient->request("GET", $url . '.json');
+    public function link($url) {
+        if ($this->strHasAt($url, "http://")) {
+            $url = str_replace("http://", "https://", $url); 
+        }
+
+        if ($this->strHasAt($url, "https://reddit.com")) {
+            $url = str_replace("reddit.com", "oauth.reddit.com", $url); 
+        }
+
+        if ($this->strHasAt($url, "https://www.reddit.com")) {
+            $url = str_replace("www.reddit.com", "oauth.reddit.com", $url); 
+        }
+
+        if ($this->strHasAt($url, "https://m.reddit.com")) {
+            $url = str_replace("m.reddit.com", "oauth.reddit.com", $url); 
+        }
         
         return $this->client->fetch($url . '.json', array(), \OAuth2\Client::HTTP_METHOD_GET);
     }
 
     
+    public function readWiki($subreddit, $page) {        
+        return $this->client->fetch("https://oauth.reddit.com/r/${subreddit}/wiki/${page}.json", array(), \OAuth2\Client::HTTP_METHOD_GET);
+    }
 };

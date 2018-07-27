@@ -52,9 +52,9 @@
             preview_text = preview_text + footer;
 
 
-        preview_text = replaceAll(preview_text, "{user}", user);
-        preview_text = replaceAll(preview_text, "{sub}", sub);
-        preview_text = replaceAll(preview_text, "{type}", type);
+        preview_text = replaceAll(preview_text, "{author}", user);
+        preview_text = replaceAll(preview_text, "{subreddit}", sub);
+        preview_text = replaceAll(preview_text, "{kind}", type);
 
         $("#preview").val(preview_text);
     }

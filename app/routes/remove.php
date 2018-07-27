@@ -1,6 +1,9 @@
 <?php
 
 $app->post('/remove', function() use ($app) {
+    $reddit = $app->reddit;
+    $reddit->login();
+
     $url = $app->request()->post('url');
     $preview = $app->request()->post('preview');
 
@@ -12,14 +15,11 @@ $app->post('/remove', function() use ($app) {
     echo "<br>";
     echo "<br>";
 
-    $action_thing = "t3_91fvch";
+    $data = $reddit->link($url);
+
+    $action_thing = $data["result"][0]["data"]["children"][0]["data"]["name"];
     
-    //$footer = $app->request()->post('footer');
-    //$header = $app->request()->post('header');
 
-    $reddit = $app->reddit;
-
-    $reddit->login();
     
     //$remove = $reddit->remove($action_thing, false);
     $comment = $reddit->comment($action_thing, $preview);
@@ -42,41 +42,39 @@ $app->get('/remove', function() use ($app) {
     $reddit->login();
 
     if ($url == null)
-        $url = "https://oauth.reddit.com/r/Jacob_Mango/comments/91fvch/testicles_above_the_number_2/";
+        $url = "http://reddit.com/r/Jacob_Mango/comments/91fvch/testicles_above_the_number_2/";
         
     $data = $reddit->link($url);
 
-    echo key($data);
+    $sub = $data["result"][0]["data"]["children"][0]["data"]["subreddit"];
+    $type = $data["result"][0]["data"]["children"][0]["kind"] == "t3" ? "post" : "comment";
+    $user = "/u/" . $data["result"][0]["data"]["children"][0]["data"]["author"];
 
-    echo "<pre>";
-    print_r($data);
-    echo "</pre>";
+    $toolboxWiki = json_decode($reddit->readWiki($sub, "toolbox")["result"]["data"]["content_md"]);
+    $removal_reasons = $toolboxWiki->removalReasons->reasons;
 
+    $header = urldecode($toolboxWiki->removalReasons->header);
+    $footer = urldecode($toolboxWiki->removalReasons->footer);
 
-    $sub = "" ;//$data[0]->children[0]->data->subreddit;
-    $type = true ? "comment" : "post";
-    $user = "u/Jacob_Mango";
+    $reasons = array();
+
+    for ($i = 0; $i < count($removal_reasons); $i++) 
+    {
+        array_push($reasons, array(
+            'index' => $i, 
+            'header' => $removal_reasons[$i]->title,
+            'message' => $removal_reasons[$i]->text
+        ));
+    }
 
     $content = "N/A";
 
     $app->render('remove.php', array(
         'url' => $url,
-        'reasons' => array(
-            array(
-                'index' => 0, 
-                'header' => "Spam",
-                'message' => "Your {type} was removed for spam."
-            ),
-            array(
-                'index' => 1, 
-                'header' => "Breaking rule 1",
-                'message' => "Your {type} was removed for breaking rule 1."
-            )
-        ),
-        'header' => "Hello {user}, your {type} was removed.",
-        'footer' => "If you wish to dispute this, [send us a modmail](https://www.reddit.com/message/compose?to=%2Fr%2F{sub}).",
-        'number_of_reasons' => 2,
-        'content' => $content,
+        'reasons' =>  $reasons,
+        'header' => $header,
+        'footer' => $footer,
+        'number_of_reasons' => count($reasons),
         'sub' => $sub,
         'type' => $type,
         'user' => $user
